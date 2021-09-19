@@ -27,7 +27,7 @@ map.on('load', () => {
         'paint': {}
         }
         // ,
-        // 'aeroway-line'
+        // 'aeroway-line' // Adds a street overlay over the 
     );
 
     // Add contours
@@ -49,6 +49,28 @@ map.on('load', () => {
         'paint': {
         'line-color': '#877b59',
         'line-width': 1
+        }
+    });
+
+    // Add 3D DEM
+
+    map.addSource('mapbox-dem', {
+        'type': 'raster-dem',
+        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        'tileSize': 512,
+        'maxzoom': 14
+        });
+        // add the DEM source as a terrain layer
+        map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1 });
+        
+        // add a sky layer that will show when the map is highly pitched
+        map.addLayer({
+            'id': 'sky',
+            'type': 'sky',
+            'paint': {
+            'sky-type': 'atmosphere',
+            'sky-atmosphere-sun': [0.0, 0.0],
+            'sky-atmosphere-sun-intensity': 15
         }
     });
 });
