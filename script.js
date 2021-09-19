@@ -7,10 +7,18 @@ const map = new mapboxgl.Map({
     zoom: 16
 });
 
-const linzBasemap = {
+// Define external tile sevices
+const linzAerialBasemap = {
     'type': 'raster',
     'tiles': [
     'https://basemaps.linz.govt.nz/v1/tiles/aerial/EPSG:3857/{z}/{x}/{y}.webp?api=c01ffbgpbsc3mjjw48jm3c7chhe'
+    ]
+};
+
+const linzTopoBasemap = {
+    'type': 'raster',
+    'tiles': [
+    'http://tiles-a.data-cdn.linz.govt.nz/services;key=780af066229e4b63a8f9408cc13c31e8/tiles/v4/layer=52343/EPSG:3857/{z}/{x}/{y}.png'
     ]
 };
 
@@ -18,7 +26,7 @@ const linzBasemap = {
 map.on('load', () => {
 
     //Add LINZ Aerial Basemap
-    map.addSource('linz-basemap-source', linzBasemap);
+    map.addSource('linz-basemap-source', linzAerialBasemap);
     map.addLayer(
         {
         'id': 'linz-basemap-layer',
@@ -27,7 +35,21 @@ map.on('load', () => {
         'paint': {}
         }
         // ,
-        // 'aeroway-line' // Adds a street overlay over the 
+        // 'aeroway-line' // Adds a street overlay over the aerial
+    );
+
+    map.addSource('linz-topo-source', linzTopoBasemap);
+    map.addLayer(
+        {
+        'id': 'linz-topo-layer',
+        'type': 'raster',
+        'source': 'linz-topo-source',
+        'paint': {},
+        'layout': {
+            // Make the layer hidden by default.
+            'visibility': 'none'
+        },
+        }
     );
 
     // Add contours
@@ -41,8 +63,8 @@ map.on('load', () => {
         'source': 'contours',
         'source-layer': 'contour',
         'layout': {
-        // Make the layer visible by default.
-        'visibility': 'visible',
+        // Make the layer hidden by default.
+        'visibility': 'none',
         'line-join': 'round',
         'line-cap': 'round'
         },
@@ -52,26 +74,76 @@ map.on('load', () => {
         }
     });
 
+    // Add Data
+    //Add Parcels
+    map.addSource('parcels', {
+        type: 'geojson',
+        // Use a URL for the value for the `data` property.
+        data: './geojson/parcels.geojson'
+    });
+    map.addLayer({
+        'id': 'parcels-layer',
+        'type': 'line',
+        'source': 'parcels',
+        'paint': {
+            'line-width': 1,
+            'line-color': 'red'
+        }
+    });
+
+    //Add Tracks
+    map.addSource('tracks', {
+        type: 'geojson',
+        // Use a URL for the value for the `data` property.
+        data: './geojson/tracks.geojson'
+    });
+    map.addLayer({
+        'id': 'tracks-layer',
+        'type': 'line',
+        'source': 'tracks',
+        'paint': {
+            'line-width': 2,
+            'line-color': 'yellow',
+            'line-dasharray': [2,1]
+        }
+    });
+
     // Add 3D DEM
 
     map.addSource('mapbox-dem', {
-        'type': 'raster-dem',
-        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-        'tileSize': 512,
-        'maxzoom': 14
-        });
-        // add the DEM source as a terrain layer
-        map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1 });
-        
-        // add a sky layer that will show when the map is highly pitched
-        map.addLayer({
-            'id': 'sky',
-            'type': 'sky',
-            'paint': {
-            'sky-type': 'atmosphere',
-            'sky-atmosphere-sun': [0.0, 0.0],
-            'sky-atmosphere-sun-intensity': 15
+    'type': 'raster-dem',
+    'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+    'tileSize': 512,
+    'maxzoom': 14
+    });
+    // add the DEM source as a terrain layer
+    map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1 });
+
+    // Add client-side Hillshade
+    map.addLayer(
+    {
+        'id': 'hillshading',
+        'source': 'mapbox-dem',
+        'type': 'hillshade'
         }
+    );
+
+    //Set distance fog
+    map.setFog({
+        "range": [1.0, 12.0],
+        "color": 'white',
+        "horizon-blend": 0.1
+    });
+    
+    // add a sky layer that will show when the map is highly pitched
+    map.addLayer({
+        'id': 'sky',
+        'type': 'sky',
+        'paint': {
+        'sky-type': 'atmosphere',
+        'sky-atmosphere-sun': [0.0, 0.0],
+        'sky-atmosphere-sun-intensity': 15
+    }
     });
 });
 
@@ -83,7 +155,7 @@ map.on('idle', () => {
     }
      
     // Enumerate ids of the layers.
-    const toggleableLayerIds = ['contours', 'linz-basemap-layer'];
+    const toggleableLayerIds = ['contours', 'linz-basemap-layer', 'linz-topo-layer'];
      
     // Set up the corresponding toggle button for each layer.
     for (const id of toggleableLayerIds) {
