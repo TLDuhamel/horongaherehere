@@ -90,7 +90,30 @@ map.on('load', () => {
             'line-color': 'lightblue'
         }
     });
-    
+    map.addLayer({ // labels
+        'id': 'river-labels',
+        'type': 'symbol',
+        'source': 'rivers',
+        'paint': {
+            'text-color': 'lightblue',
+            'text-halo-blur': 2,
+            'text-halo-color': '#4a5c52',
+            'text-halo-width': 3
+        },
+        'layout': {
+        'symbol-placement': 'line',
+        'text-max-angle': 45,
+        'text-pitch-alignment': 'map',
+        // 'text-offset': [0,-1],
+        'text-field': [
+            'format',
+            ['get', 'name'],
+            { 'font-scale': 1.1 }
+        ],
+        'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold']
+        }
+        });
+
     // Add Data
     //Add Parcels
     map.addSource('parcels', {
@@ -130,14 +153,18 @@ map.on('load', () => {
         'source': 'tracks',
         'paint': {
             'text-color': 'yellow',
+            'text-halo-blur': 2,
             'text-halo-color': '#4a5c52',
-            'text-halo-width': 5
+            'text-halo-width': 3
         },
         'layout': {
-        'symbol-placement': 'line',
+        'symbol-placement': 'line-center',
+        'text-max-angle': 38,
+        'text-pitch-alignment': 'viewport',
+        // 'text-offset': [0,-1],
         'text-field': [
             'format',
-            ['upcase', ['get', 'Name']],
+            ['get', 'Name'],
             { 'font-scale': 0.8 }
             // ,
             // '\n',
@@ -170,11 +197,11 @@ map.on('load', () => {
     );
 
     //Set distance fog
-    map.setFog({
-        "range": [1.0, 12.0],
-        "color": 'white',
-        "horizon-blend": 0.1
-    });
+    // map.setFog({
+    //     "range": [1.0, 12.0],
+    //     "color": 'white',
+    //     "horizon-blend": 0.1
+    // });
     
     // add a sky layer that will show when the map is highly pitched
     map.addLayer({
