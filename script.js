@@ -4,7 +4,8 @@ const map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/mapbox/streets-v11',
     center: [175.598355, -36.739488],
-    zoom: 16
+    zoom: 16,
+    pitch: 40
 });
 
 // Define external tile sevices
@@ -107,6 +108,30 @@ map.on('load', () => {
             'line-dasharray': [2,1]
         }
     });
+    map.addLayer({ // labels
+        'id': 'track-labels',
+        'type': 'symbol',
+        'source': 'tracks',
+        'paint': {
+            'text-color': 'yellow',
+            'text-halo-color': '#4a5c52',
+            'text-halo-width': 5
+        },
+        'layout': {
+        'symbol-placement': 'line',
+        'text-field': [
+            'format',
+            ['upcase', ['get', 'Name']],
+            { 'font-scale': 0.8 }
+            // ,
+            // '\n',
+            // {},
+            // ['downcase', ['get', 'Description']],
+            // { 'font-scale': 0.6 }
+        ],
+        'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold']
+        }
+        });
 
     // Add 3D DEM
 
