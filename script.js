@@ -4,8 +4,11 @@ const map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/mapbox/streets-v11',
     center: [175.598355, -36.739488],
-    zoom: 16
+    zoom: 16,
+    pitch: 40
 });
+
+var minZoom = 12; // min zoom at which features will be hidden
 
 // Define external tile sevices
 const linzAerialBasemap = {
@@ -21,6 +24,11 @@ const linzTopoBasemap = {
     'http://tiles-a.data-cdn.linz.govt.nz/services;key=780af066229e4b63a8f9408cc13c31e8/tiles/v4/layer=52343/EPSG:3857/{z}/{x}/{y}.png'
     ]
 };
+
+const nav = new mapboxgl.NavigationControl({
+    visualizePitch: true
+});
+map.addControl(nav, 'top-left');
 
 // Wait until the map has finished loading.
 map.on('load', () => {
@@ -74,6 +82,47 @@ map.on('load', () => {
         }
     });
 
+    //Add Rivers
+    map.addSource('rivers', {
+        type: 'geojson',
+        // Use a URL for the value for the `data` property.
+        data: './geojson/rivers.geojson'
+    });
+    map.addLayer({
+        'id': 'rivers-layer',
+        'type': 'line',
+        'minzoom': minZoom,
+        'source': 'rivers',
+        'paint': {
+            'line-width': 10,
+            'line-color': 'lightblue'
+        }
+    });
+    map.addLayer({ // labels
+        'id': 'river-labels',
+        'type': 'symbol',
+        'minzoom': minZoom,
+        'source': 'rivers',
+        'paint': {
+            'text-color': 'lightblue',
+            'text-halo-blur': 2,
+            'text-halo-color': '#4a5c52',
+            'text-halo-width': 3
+        },
+        'layout': {
+        'symbol-placement': 'line',
+        'text-max-angle': 45,
+        'text-pitch-alignment': 'map',
+        // 'text-offset': [0,-1],
+        'text-field': [
+            'format',
+            ['get', 'name'],
+            { 'font-scale': 1.1 }
+        ],
+        'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold']
+        }
+        });
+
     // Add Data
     //Add Parcels
     map.addSource('parcels', {
@@ -84,10 +133,37 @@ map.on('load', () => {
     map.addLayer({
         'id': 'parcels-layer',
         'type': 'line',
+        'minzoom': minZoom,
         'source': 'parcels',
         'paint': {
             'line-width': 1,
             'line-color': 'red'
+        }
+    });
+    map.addLayer({ // parcel labels
+        'id': 'parcel-labels',
+        'type': 'symbol',
+        'minzoom': minZoom,
+        'source': 'parcels',
+        'paint': {
+            'text-color': 'red'
+        },
+        'layout': {
+        'symbol-placement': 'line',
+        'text-max-angle': 38,
+        'text-pitch-alignment': 'map',
+        'text-offset': [0,0.7],
+        'text-field': [
+            'format',
+            ['get', 'owners'],
+            { 'font-scale': 0.5 }
+            // ,
+            // '\n',
+            // {},
+            // ['downcase', ['get', 'Description']],
+            // { 'font-scale': 0.6 }
+        ],
+        'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold']
         }
     });
 
@@ -101,10 +177,40 @@ map.on('load', () => {
         'id': 'tracks-layer',
         'type': 'line',
         'source': 'tracks',
+        'minzoom': minZoom,
         'paint': {
             'line-width': 2,
             'line-color': 'yellow',
             'line-dasharray': [2,1]
+        }
+    });
+    map.addLayer({ // labels
+        'id': 'track-labels',
+        'type': 'symbol',
+        'source': 'tracks',
+        'minzoom': minZoom,
+        'paint': {
+            'text-color': 'yellow',
+            'text-halo-blur': 2,
+            'text-halo-color': '#4a5c52',
+            'text-halo-width': 3
+        },
+        'layout': {
+        'symbol-placement': 'line-center',
+        'text-max-angle': 38,
+        'text-pitch-alignment': 'viewport',
+        // 'text-offset': [0,-1],
+        'text-field': [
+            'format',
+            ['get', 'Name'],
+            { 'font-scale': 0.8 }
+            // ,
+            // '\n',
+            // {},
+            // ['downcase', ['get', 'Description']],
+            // { 'font-scale': 0.6 }
+        ],
+        'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold']
         }
     });
 
@@ -129,11 +235,11 @@ map.on('load', () => {
     );
 
     //Set distance fog
-    map.setFog({
-        "range": [1.0, 12.0],
-        "color": 'white',
-        "horizon-blend": 0.1
-    });
+    // map.setFog({
+    //     "range": [1.0, 12.0],
+    //     "color": 'white',
+    //     "horizon-blend": 0.1
+    // });
     
     // add a sky layer that will show when the map is highly pitched
     map.addLayer({
