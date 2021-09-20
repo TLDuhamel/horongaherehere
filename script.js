@@ -75,6 +75,22 @@ map.on('load', () => {
         }
     });
 
+    //Add Rivers
+    map.addSource('rivers', {
+        type: 'geojson',
+        // Use a URL for the value for the `data` property.
+        data: './geojson/rivers.geojson'
+    });
+    map.addLayer({
+        'id': 'rivers-layer',
+        'type': 'line',
+        'source': 'rivers',
+        'paint': {
+            'line-width': 10,
+            'line-color': 'lightblue'
+        }
+    });
+    
     // Add Data
     //Add Parcels
     map.addSource('parcels', {
