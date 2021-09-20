@@ -8,6 +8,8 @@ const map = new mapboxgl.Map({
     pitch: 40
 });
 
+var minZoom = 12; // min zoom at which features will be hidden
+
 // Define external tile sevices
 const linzAerialBasemap = {
     'type': 'raster',
@@ -22,6 +24,11 @@ const linzTopoBasemap = {
     'http://tiles-a.data-cdn.linz.govt.nz/services;key=780af066229e4b63a8f9408cc13c31e8/tiles/v4/layer=52343/EPSG:3857/{z}/{x}/{y}.png'
     ]
 };
+
+const nav = new mapboxgl.NavigationControl({
+    visualizePitch: true
+});
+map.addControl(nav, 'top-left');
 
 // Wait until the map has finished loading.
 map.on('load', () => {
@@ -84,6 +91,7 @@ map.on('load', () => {
     map.addLayer({
         'id': 'rivers-layer',
         'type': 'line',
+        'minzoom': minZoom,
         'source': 'rivers',
         'paint': {
             'line-width': 10,
@@ -93,6 +101,7 @@ map.on('load', () => {
     map.addLayer({ // labels
         'id': 'river-labels',
         'type': 'symbol',
+        'minzoom': minZoom,
         'source': 'rivers',
         'paint': {
             'text-color': 'lightblue',
@@ -124,10 +133,37 @@ map.on('load', () => {
     map.addLayer({
         'id': 'parcels-layer',
         'type': 'line',
+        'minzoom': minZoom,
         'source': 'parcels',
         'paint': {
             'line-width': 1,
             'line-color': 'red'
+        }
+    });
+    map.addLayer({ // parcel labels
+        'id': 'parcel-labels',
+        'type': 'symbol',
+        'minzoom': minZoom,
+        'source': 'parcels',
+        'paint': {
+            'text-color': 'red'
+        },
+        'layout': {
+        'symbol-placement': 'line',
+        'text-max-angle': 38,
+        'text-pitch-alignment': 'map',
+        'text-offset': [0,0.7],
+        'text-field': [
+            'format',
+            ['get', 'owners'],
+            { 'font-scale': 0.5 }
+            // ,
+            // '\n',
+            // {},
+            // ['downcase', ['get', 'Description']],
+            // { 'font-scale': 0.6 }
+        ],
+        'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold']
         }
     });
 
@@ -141,6 +177,7 @@ map.on('load', () => {
         'id': 'tracks-layer',
         'type': 'line',
         'source': 'tracks',
+        'minzoom': minZoom,
         'paint': {
             'line-width': 2,
             'line-color': 'yellow',
@@ -151,6 +188,7 @@ map.on('load', () => {
         'id': 'track-labels',
         'type': 'symbol',
         'source': 'tracks',
+        'minzoom': minZoom,
         'paint': {
             'text-color': 'yellow',
             'text-halo-blur': 2,
@@ -174,7 +212,7 @@ map.on('load', () => {
         ],
         'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold']
         }
-        });
+    });
 
     // Add 3D DEM
 
