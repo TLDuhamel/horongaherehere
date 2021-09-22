@@ -150,7 +150,7 @@ map.on('load', () => {
         'source': 'parcels',
         'paint': {
             // 'stroke-width': 1,
-            'fill-color': '#627BC1',
+            'fill-color': '#42adf5',
             'fill-opacity': 0
         }
     });
@@ -161,7 +161,7 @@ map.on('load', () => {
         'source': 'parcels',
         'paint': {
             'line-width': 1,
-            'line-color': '#627BC1',
+            'line-color': '#42adf5',
         }
     });
     map.addLayer({ // parcel labels
@@ -170,30 +170,39 @@ map.on('load', () => {
         'minzoom': minZoom,
         'source': 'parcels',
         'paint': {
-            'text-color': '#627BC1',
+            'text-color': '#42adf5',
             'text-opacity': [
                 'case',
                 ['boolean', ['feature-state', 'hover'], false],
                 1,
                 0.6
-            ]
+            ],
+            'text-halo-width': [
+                'case',
+                ['boolean', ['feature-state', 'hover'], false],
+                2,
+                0
+            ],
+            'text-halo-blur': 2,
+            'text-halo-color': '#4a5c52'
         },
         'layout': {
-        'symbol-placement': 'line',
-        'text-max-angle': 38,
-        'text-pitch-alignment': 'viewport',
-        'text-offset': [0,0.7],
-        'text-field': [
-            'format',
-            ['get', 'owners'],
-            { 'font-scale': 0.6 }
-            // ,
-            // '\n',
-            // {},
-            // ['downcase', ['get', 'Description']],
-            // { 'font-scale': 0.6 }
-        ],
-        'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold']
+            'symbol-placement': 'line',
+            'symbol-spacing': 600,
+            'text-max-angle': 38,
+            'text-pitch-alignment': 'viewport',
+            'text-offset': [0,0.7],
+            'text-field': [
+                'format',
+                ['get', 'owners'],
+                { 'font-scale': 0.6 }
+                // ,
+                // '\n',
+                // {},
+                // ['downcase', ['get', 'Description']],
+                // { 'font-scale': 0.6 }
+            ],
+            'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold']
         }
     });
 
