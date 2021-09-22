@@ -10,6 +10,7 @@ const map = new mapboxgl.Map({
 
 var minZoom = 12; // min zoom at which features will be hidden
 let parcelHoveredStateId = null;
+let tracksHoveredStateId = null;
 
 // Define external tile sevices
 const linzAerialBasemap = {
@@ -22,7 +23,7 @@ const linzAerialBasemap = {
 const linzTopoBasemap = {
     'type': 'raster',
     'tiles': [
-    'http://tiles-a.data-cdn.linz.govt.nz/services;key=780af066229e4b63a8f9408cc13c31e8/tiles/v4/layer=52343/EPSG:3857/{z}/{x}/{y}.png'
+    'https://tiles-a.data-cdn.linz.govt.nz/services;key=780af066229e4b63a8f9408cc13c31e8/tiles/v4/layer=52343/EPSG:3857/{z}/{x}/{y}.png'
     ]
 };
 
@@ -210,7 +211,8 @@ map.on('load', () => {
     map.addSource('tracks', {
         type: 'geojson',
         // Use a URL for the value for the `data` property.
-        data: './geojson/tracks.geojson'
+        data: './geojson/tracks.geojson',
+        generateId: true
     });
     map.addLayer({
         'id': 'tracks-layer',
@@ -311,6 +313,56 @@ map.on('load', () => {
             );
         }
         parcelHoveredStateId = null;
+    });
+
+    /* Track Popups */
+
+    // Create a popup, but don't add it to the map yet.
+    const popup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: false
+    });
+     
+    map.on('mouseenter', 'tracks-layer', (e) => {
+        // Change the cursor style as a UI indicator.
+        map.getCanvas().style.cursor = 'pointer';
+        
+        const description = e.features[0].properties.Description;
+        const name = e.features[0].properties.Name;
+        const html = `<h4>${name}</h4>${description}`
+        
+        // Populate the popup
+        popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
+
+        // Set hover feature state
+        if (e.features.length > 0 && tracksHoveredStateId != e.features[0].id) {
+            if (tracksHoveredStateId !== null) {
+                map.setFeatureState(
+                    { source: 'tracks', id: tracksHoveredStateId },
+                    { hover: false }
+                );
+            }
+            tracksHoveredStateId = e.features[0].id;
+            map.setFeatureState(
+                { source: 'tracks', id: tracksHoveredStateId },
+                { hover: true }
+            );
+            // map.getSource('tracks').setData('./geojson/tracks.geojson') // hacky workaround for buggy hovering behaviour. Force a repaint of the parcels layer, but introduces a short lag.
+        }
+    });
+     
+    map.on('mouseleave', 'tracks-layer', () => {
+        map.getCanvas().style.cursor = '';
+        popup.remove();
+
+        // update hover feature state
+        if (tracksHoveredStateId !== null) {
+            map.setFeatureState(
+                { source: 'tracks', id: tracksHoveredStateId },
+                { hover: false }
+            );
+        }
+        tracksHoveredStateId = null;
     });
 });
 
