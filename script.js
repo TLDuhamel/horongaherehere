@@ -9,6 +9,7 @@ const map = new mapboxgl.Map({
 });
 
 var minZoom = 12; // min zoom at which features will be hidden
+let parcelHoveredStateId = null;
 
 // Define external tile sevices
 const linzAerialBasemap = {
@@ -32,6 +33,17 @@ map.addControl(nav, 'top-left');
 
 // Wait until the map has finished loading.
 map.on('load', () => {
+
+    // Add 3D DEM
+
+    map.addSource('mapbox-dem', {
+    'type': 'raster-dem',
+    'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+    'tileSize': 512,
+    'maxzoom': 14
+    });
+    // add the DEM source as a terrain layer
+    map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1 });
 
     //Add LINZ Aerial Basemap
     map.addSource('linz-basemap-source', linzAerialBasemap);
@@ -128,16 +140,28 @@ map.on('load', () => {
     map.addSource('parcels', {
         type: 'geojson',
         // Use a URL for the value for the `data` property.
-        data: './geojson/parcels.geojson'
+        data: './geojson/parcels.geojson',
+        generateId: true
     });
     map.addLayer({
         'id': 'parcels-layer',
+        'type': 'fill',
+        'minzoom': minZoom,
+        'source': 'parcels',
+        'paint': {
+            // 'stroke-width': 1,
+            'fill-color': '#627BC1',
+            'fill-opacity': 0
+        }
+    });
+    map.addLayer({
+        'id': 'parcels-layer-outline',
         'type': 'line',
         'minzoom': minZoom,
         'source': 'parcels',
         'paint': {
             'line-width': 1,
-            'line-color': 'red'
+            'line-color': '#627BC1',
         }
     });
     map.addLayer({ // parcel labels
@@ -146,17 +170,23 @@ map.on('load', () => {
         'minzoom': minZoom,
         'source': 'parcels',
         'paint': {
-            'text-color': 'red'
+            'text-color': '#627BC1',
+            'text-opacity': [
+                'case',
+                ['boolean', ['feature-state', 'hover'], false],
+                1,
+                0.6
+            ]
         },
         'layout': {
         'symbol-placement': 'line',
         'text-max-angle': 38,
-        'text-pitch-alignment': 'map',
+        'text-pitch-alignment': 'viewport',
         'text-offset': [0,0.7],
         'text-field': [
             'format',
             ['get', 'owners'],
-            { 'font-scale': 0.5 }
+            { 'font-scale': 0.6 }
             // ,
             // '\n',
             // {},
@@ -214,17 +244,6 @@ map.on('load', () => {
         }
     });
 
-    // Add 3D DEM
-
-    map.addSource('mapbox-dem', {
-    'type': 'raster-dem',
-    'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-    'tileSize': 512,
-    'maxzoom': 14
-    });
-    // add the DEM source as a terrain layer
-    map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1 });
-
     // Add client-side Hillshade
     map.addLayer(
     {
@@ -250,6 +269,39 @@ map.on('load', () => {
         'sky-atmosphere-sun': [0.0, 0.0],
         'sky-atmosphere-sun-intensity': 15
     }
+    });
+
+
+    /* HOVER EFFECT FUNCTIONS */    
+    // When the user moves their mouse over the parcels-layer layer, we'll update the
+    // feature state for the feature under the mouse.
+    map.on('mousemove', 'parcels-layer', (e) => {
+        if (e.features.length > 0 && parcelHoveredStateId != e.features[0].id) {
+            if (parcelHoveredStateId !== null) {
+                map.setFeatureState(
+                    { source: 'parcels', id: parcelHoveredStateId },
+                    { hover: false }
+                );
+            }
+            parcelHoveredStateId = e.features[0].id;
+            map.setFeatureState(
+                { source: 'parcels', id: parcelHoveredStateId },
+                { hover: true }
+            );
+            map.getSource('parcels').setData('./geojson/parcels.geojson') // hacky workaround for buggy hovering behaviour. Force a repaint of the parcels layer, but introduces a short lag.
+        }
+    });
+     
+    // When the mouse leaves the state-fill layer, update the feature state of the
+    // previously hovered feature.
+    map.on('mouseleave', 'parcels-layer', () => {
+        if (parcelHoveredStateId !== null) {
+            map.setFeatureState(
+                { source: 'parcels', id: parcelHoveredStateId },
+                { hover: false }
+            );
+        }
+        parcelHoveredStateId = null;
     });
 });
 
@@ -306,3 +358,4 @@ map.on('idle', () => {
         layers.appendChild(link);
     }
 });
+
