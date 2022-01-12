@@ -16,7 +16,7 @@ let tracksHoveredStateId = null;
 const linzAerialBasemap = {
     'type': 'raster',
     'tiles': [
-    'https://basemaps.linz.govt.nz/v1/tiles/aerial/EPSG:3857/{z}/{x}/{y}.webp?api=c01ffbgpbsc3mjjw48jm3c7chhe'
+    'https://basemaps.linz.govt.nz/v1/tiles/aerial/EPSG:3857/{z}/{x}/{y}.webp?api=d01fbtg0aqx6dvgd9rr4qb53ff2'
     ]
 };
 
